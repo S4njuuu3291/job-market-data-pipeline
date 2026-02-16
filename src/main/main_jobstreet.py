@@ -1,10 +1,13 @@
-import pandas as pd
-from src.scraper.jobscraper_jobstreet import jobscraper_jobstreet
-from src.utils.data_validator import validate_job_data
-from src.utils.upload_to_s3 import upload_to_s3
-import asyncio
+# Lazy import untuk cold start cepat
+import asyncio  # Untuk __main__ block saja
 
 async def run_jobstreet_pipeline(keywords:list):
+    # Import HANYA saat fungsi dipanggil
+    import pandas as pd
+    from src.scraper.jobscraper_jobstreet import jobscraper_jobstreet
+    from src.utils.data_validator import validate_job_data
+    from src.utils.upload_to_s3 import upload_to_s3
+    
     df_jobstreet_full = pd.DataFrame()  # DataFrame kosong untuk menampung semua hasil dari berbagai keyword
 
     for keyword in keywords:

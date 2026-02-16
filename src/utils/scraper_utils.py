@@ -35,12 +35,11 @@ async def create_browser(p, headless:bool=True):
             headless=headless,
             args=[
                 '--disable-blink-features=AutomationControlled',
-                '--use-angle=gl',           # Force ANGLE GL instead SwiftShader
-                '--disable-gpu-sandbox',    # Allow raw GPU access
-                '--enable-webgl2',          # Enable WebGL2
+                '--disable-gpu',            # Disable GPU hardware acceleration
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--single-process',         # CRITICAL: Prevents page creation hang in Lambda
                 '--disable-extensions',
                 '--disable-default-apps',
                 '--disable-sync',

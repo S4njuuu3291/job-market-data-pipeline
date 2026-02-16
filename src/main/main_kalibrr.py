@@ -1,10 +1,11 @@
-import pandas as pd
-from src.scraper.jobscraper_kalibrr import jobscraper_kalibrr
-from src.utils.data_validator import validate_job_data
-from src.utils.upload_to_s3 import upload_to_s3
-import asyncio
-
+# Lazy import: pindahkan import berat ke dalam fungsi
 async def run_kalibrr_pipeline(keywords:list):
+    # Import pandas HANYA saat pipeline jalan
+    import pandas as pd
+    from src.scraper.jobscraper_kalibrr import jobscraper_kalibrr
+    from src.utils.data_validator import validate_job_data
+    from src.utils.upload_to_s3 import upload_to_s3
+    
     df_kalibrr_full = pd.DataFrame()  # DataFrame kosong untuk menampung semua hasil dari berbagai keyword
 
     for keyword in keywords:
@@ -38,6 +39,7 @@ async def run_kalibrr_pipeline(keywords:list):
         print(f"❌ Pipeline Berhenti di tahap Validasi/Upload: {e}")
     
 if __name__ == "__main__":
+    import asyncio
     keywords = "data-engineer-intern"
     keywords = [
         "data-engineer-intern",
