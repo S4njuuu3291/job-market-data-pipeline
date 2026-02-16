@@ -4,21 +4,31 @@ from src.utils.data_validator import validate_job_data
 from src.utils.upload_to_s3 import upload_to_s3
 import asyncio
 
-async def run_kalibrr_pipeline(keyword:str):
-    print("--- 🏁 Memulai Pipeline Kalibrr ---")
-    URL = f"https://kalibrr.id/id-ID/home/w/100-internship-_-ojt/w/200-entry-level-_-junior-and-apprentice/te/{keyword}?sort=Relevance"
+async def run_kalibrr_pipeline(keywords:list):
+    df_kalibrr_full = pd.DataFrame()  # DataFrame kosong untuk menampung semua hasil dari berbagai keyword
 
-    raw_data =  await jobscraper_kalibrr(URL,headless=True)
+    for keyword in keywords:
+        print("--- 🏁 Memulai Pipeline Kalibrr ---")
+        URL = f"https://kalibrr.id/id-ID/home/w/100-internship-_-ojt/w/200-entry-level-_-junior-and-apprentice/te/{keyword}?sort=Relevance"
 
-    if not raw_data:
-        print("❌ Gagal: Tidak ada data yang berhasil ditarik.")
-        return
-    
+        raw_data =  await jobscraper_kalibrr(URL,headless=True)
+
+        if not raw_data:
+            print("❌ Gagal: Tidak ada data yang berhasil ditarik.")
+            continue
+        
+        df_kalibrr = pd.DataFrame(raw_data)
+        df_kalibrr["keyword"] = keyword
+
+        df_kalibrr_full = pd.concat([df_kalibrr_full, df_kalibrr], ignore_index=True)  # Gabungkan hasil ke DataFrame utama
+        
     try:
-        df = pd.DataFrame(raw_data)
+        df = pd.DataFrame(df_kalibrr_full)
+        df.drop_duplicates(subset=["job_id"], inplace=True)  # Hapus duplikat berdasarkan job_id
+
         df_validated = validate_job_data(df)
         print(f"✅ Validasi Sukses: {len(df_validated)} baris siap dikirim.")
-
+        
         success = upload_to_s3(df_validated,platform="kalibrr")
         if success:
             print("--- 🏆 Pipeline Selesai dengan Sukses ---")
@@ -28,5 +38,11 @@ async def run_kalibrr_pipeline(keyword:str):
         print(f"❌ Pipeline Berhenti di tahap Validasi/Upload: {e}")
     
 if __name__ == "__main__":
-    keyword = "data-engineer-intern"
-    asyncio.run(run_kalibrr_pipeline(keyword))
+    keywords = "data-engineer-intern"
+    keywords = [
+        "data-engineer-intern",
+        "etl-developer-intern",
+        "big-data-intern",
+        "bi-engineer-intern",
+    ]
+    asyncio.run(run_kalibrr_pipeline(keywords))
