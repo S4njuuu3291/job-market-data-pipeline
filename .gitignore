@@ -177,6 +177,7 @@ terraform.rc
 .env.*.local
 *.tmp
 .DS_Store
+output/
 secrets/
 credentials/
 
