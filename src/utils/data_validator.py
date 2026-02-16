@@ -1,5 +1,5 @@
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 from pandera.pandas import DataFrameSchema,Column,Check
 import json
 
@@ -16,6 +16,15 @@ job_schema = DataFrameSchema(
     strict=False,
     coerce=True
 )
+
+def validate_job_data(df:pd.DataFrame):
+    try:
+        df_validated = job_schema.validate(df)
+        print("✅ Data berhasil divalidasi!")
+        return df_validated
+    except pa.errors.SchemaError as e:
+        print(f"❌ Data kotor/tidak valid: {e}")
+        raise e
 
 if __name__ == "__main__":
     file_path = r"output/kalibrr_raw_20260216_081739.json" 

@@ -1,13 +1,11 @@
 from playwright.async_api import Browser,BrowserContext,Page,async_playwright
-import asyncio
 from datetime import datetime
-from utils.scraper_utils import create_browser,create_stealth_context,human_delay,fast_human_scroll
-from utils.data_validator import job_schema
-import time
+from src.utils.scraper_utils import create_browser,create_stealth_context,human_delay,fast_human_scroll
+from src.utils.data_validator import job_schema
+from src.utils.keywords import ALLOWED,BLOCKED
 import hashlib
 import json
 import os
-
 
 async def jobscraper_kalibrr(url:str,headless:bool=True):
     async with async_playwright() as p:
@@ -23,11 +21,7 @@ async def jobscraper_kalibrr(url:str,headless:bool=True):
 
         results = []
 
-        """
-        k-flex k-p-4 k-gap-2
-        """
-
-        max_clicks = 5
+        max_clicks = 1
         button_selector = "button.k-btn-primary:has-text('Load more jobs')"
 
         for i in range(max_clicks):
@@ -49,12 +43,20 @@ async def jobscraper_kalibrr(url:str,headless:bool=True):
 
         job_cards = await page.locator("div.css-1otdiuc").all()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         for card in job_cards:
             try:
                 # 1. Job Title & URL (Pakai atribut itemprop="name" yang ada di tag <a>)
                 title_elem = card.locator('h2 a[itemprop="name"]').first
                 job_title = (await title_elem.text_content()).strip()
+
+                job_title_lower = job_title.lower()
+
+                is_relevant = any(word in job_title_lower for word in ALLOWED)
+                is_trash = any(word in job_title_lower for word in BLOCKED)
+
+                if not is_relevant or is_trash:
+                    continue
                 
                 relative_url = await title_elem.get_attribute('href')
                 full_url = f"https://www.kalibrr.com{relative_url}"
@@ -100,10 +102,10 @@ async def jobscraper_kalibrr(url:str,headless:bool=True):
         await context.close()
         await browser.close()
 
-        return results
+        return results # list
 
 
 if __name__ == "__main__":
     URL = "https://kalibrr.id/id-ID/home/w/100-internship-_-ojt/te/data-engineer-intern"
 
-    asyncio.run(jobscraper_kalibrr(URL))
+    # asyncio.run(jobscraper_kalibrr(URL))
